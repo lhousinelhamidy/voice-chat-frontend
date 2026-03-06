@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الميكروفون</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .test-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+        }
+        .test-result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
+        .device-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .audio-level {
+            height: 20px;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A, #CDDC39);
+            border-radius: 10px;
+            transition: width 0.1s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card test-container">
+            <h1 style="text-align: center;">🎤 اختبار الميكروفون</h1>
+            
+            <div id="status" class="test-result info">
+                جاري الفحص...
+            </div>
+
+            <div id="devices-section" style="display: none;">
+                <h3>الأجهزة المتاحة:</h3>
+                <div id="devices-list"></div>
+            </div>
+
+            <div id="test-section" style="display: none; margin-top: 20px;">
+                <h3>مستوى الصوت:</h3>
+                <div style="background: #f0f0f0; padding: 10px; border-radius: 10px;">
+                    <div id="audio-level" class="audio-level" style="width: 0%;"></div>
+                </div>
+                <p style="text-align: center; margin-top: 10px; color: #666;">
+                    🎙️ تكلم الآن لاختبار الميكروفون
+                </p>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <button class="btn btn-primary" onclick="testMicrophone()">
+                    ابدأ الاختبار
+                </button>
+                <button class="btn" onclick="window.location.href='index.html'" style="margin-right: 10px;">
+                    العودة للرئيسية
+                </button>
+            </div>
+
+            <div id="debug-info" style="margin-top: 30px; font-size: 12px; color: #666;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: bold;">معلومات تقنية</summary>
+                    <div id="debug-content" style="margin-top: 10px; background: #f9f9f9; padding: 10px; border-radius: 5px; text-align: right;">
+                        <!-- سيتم ملؤها بـ JS -->
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioContext;
+        let analyser;
+        let microphone;
+        let stream;
+
+        // فحص أولي
+        window.addEventListener('DOMContentLoaded', () => {
+            checkBrowserSupport();
+        });
+
+        function checkBrowserSupport() {
+            const debugInfo = [];
+            const status = document.getElementById('status');
+            
+            // فحص المتصفح
+            debugInfo.push(`Browser: ${navigator.userAgent}`);
+            debugInfo.push(`HTTPS: ${location.protocol === 'https:' ? '✅ نعم' : '❌ لا'}`);
+            
+            // فحص دعم WebRTC
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                status.className = 'test-result error';
+                status.innerHTML = `❌ متصفحك لا يدعم WebRTC<br><small>جرب Chrome أو Firefox الحديث</small>`;
+                debugInfo.push('getUserMedia: ❌ غير مدعوم');
+            } else {
+                debugInfo.push('getUserMedia: ✅ مدعوم');
+                status.className = 'test-result info';
+                status.innerHTML = '✅ المتصفح يدعم WebRTC<br><small>اضغط "ابدأ الاختبار"</small>';
+            }
+            
+            // عرض معلومات Debug
+            document.getElementById('debug-content').innerHTML = debugInfo.join('<br>');
+        }
+
+        async function testMicrophone() {
+            const status = document.getElementById('status');
+            status.className = 'test-result info';
+            status.textContent = '⏳ جاري طلب الوصول للميكروفون...';
+
+            try {
+                // محاولة 1: Basic
+                console.log('Attempt 1: Basic constraints');
+                stream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: false
+                });
+
+                status.className = 'test-result success';
+                status.innerHTML = '✅ تم الوصول للميكروفون بنجاح!<br><small>تكلم الآن لرؤية مستوى الصوت</small>';
+
+                // عرض الأجهزة المتاحة
+                await showDevices();
+
+                // بدء تحليل الصوت
+                startAudioAnalysis();
+
+            } catch (error) {
+                console.error('Microphone error:', error);
+                
+                status.className = 'test-result error';
+                
+                let errorMessage = '❌ خطأ في الوصول للميكروفون<br><br>';
+                
+                switch(error.name) {
+                    case 'NotAllowedError':
+                    case 'PermissionDeniedError':
+                        errorMessage += `<strong>السبب:</strong> لم تمنح الإذن للميكروفون<br><br>
+                        <strong>الحل:</strong><br>
+                        1. اضغط على أيقونة 🔒 في شريط العنوان<br>
+                        2. اختر "Microphone" أو "ميكروفون"<br>
+                        3. اختر "Allow" أو "السماح"<br>
+                        4. حدّث الصفحة`;
+                        break;
+                        
+                    case 'NotFoundError':
+                    case 'DevicesNotFoundError':
+                        errorMessage += `<strong>السبب:</strong> لم يتم العثور على ميكروفون<br><br>
+                        <strong>الحل:</strong><br>
+                        1. تأكد من توصيل ميكروفون<br>
+                        2. في الإعدادات → الصوت → تحقق من الجهاز الافتراضي<br>
+                        3. جرب ميكروفون آخر`;
+                        break;
+                        
+                    case 'NotReadableError':
+                    case 'TrackStartError':
+                        errorMessage += `<strong>السبب:</strong> الميكروفون مستخدم من تطبيق آخر<br><br>
+                        <strong>الحل:</strong><br>
+                        1. أغلق Zoom / Skype / Teams<br>
+                        2. أغلق تبويبات أخرى تستخدم الميكروفون<br>
+                        3. أعد تشغيل المتصفح`;
+                        break;
+                        
+                    case 'OverconstrainedError':
+                        errorMessage += `<strong>السبب:</strong> إعدادات الصوت غير مدعومة<br><br>
+                        <strong>الحل:</strong><br>
+                        هذا خطأ برمجي، الرجاء إبلاغ المطور`;
+                        break;
+                        
+                    default:
+                        errorMessage += `<strong>خطأ:</strong> ${error.name}<br>
+                        <strong>الرسالة:</strong> ${error.message}<br><br>
+                        جرب متصفح آخر (Chrome مفضل)`;
+                }
+                
+                status.innerHTML = errorMessage;
+                
+                // إضافة للـ debug
+                document.getElementById('debug-content').innerHTML += `<br><br><strong>Error Details:</strong><br>
+                    Name: ${error.name}<br>
+                    Message: ${error.message}<br>
+                    Stack: ${error.stack}`;
+            }
+        }
+
+        async function showDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioDevices = devices.filter(d => d.kind === 'audioinput');
+                
+                const devicesSection = document.getElementById('devices-section');
+                const devicesList = document.getElementById('devices-list');
+                
+                devicesList.innerHTML = '';
+                
+                audioDevices.forEach((device, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'device-item';
+                    div.innerHTML = `
+                        🎤 <strong>${device.label || `ميكروفون ${index + 1}`}</strong>
+                        ${device.deviceId === 'default' ? '<span style="color: green;"> (افتراضي)</span>' : ''}
+                    `;
+                    devicesList.appendChild(div);
+                });
+                
+                devicesSection.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error listing devices:', error);
+            }
+        }
+
+        function startAudioAnalysis() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                microphone.connect(analyser);
+                
+                document.getElementById('test-section').style.display = 'block';
+                
+                function updateLevel() {
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    // حساب المتوسط
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    const average = sum / bufferLength;
+                    
+                    // تحديث الشريط
+                    const percentage = Math.min(100, (average / 128) * 100);
+                    document.getElementById('audio-level').style.width = percentage + '%';
+                    
+                    requestAnimationFrame(updateLevel);
+                }
+                
+                updateLevel();
+                
+            } catch (error) {
+                console.error('Error starting audio analysis:', error);
+            }
+        }
+
+        // تنظيف عند الخروج
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (audioContext) {
+                audioContext.close();
+            }
+        });
+    </script>
+</body>
+</html>

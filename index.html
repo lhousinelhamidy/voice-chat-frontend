@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="دردشة صوتية خفيفة وآمنة - P2P Voice Chat">
+    <title>Voice Chat - دردشة صوتية</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎙️ Voice Chat</h1>
+            <p class="subtitle">دردشة صوتية خفيفة وآمنة بين شخصين</p>
+        </header>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('create')">إنشاء روم</button>
+                <button class="tab" onclick="showTab('join')">الانضمام لروم</button>
+            </div>
+
+            <!-- إنشاء روم جديد -->
+            <div id="create-tab" class="tab-content active">
+                <div class="form-group">
+                    <label>🔑 كلمة السر (اختياري)</label>
+                    <input type="password" id="create-password" placeholder="اتركه فارغاً للروم المفتوح">
+                </div>
+                <button class="btn btn-primary" onclick="createRoom()">
+                    إنشاء روم جديد
+                </button>
+            </div>
+
+            <!-- الانضمام لروم موجود -->
+            <div id="join-tab" class="tab-content">
+                <div class="form-group">
+                    <label>🏠 رقم الروم</label>
+                    <input type="text" id="join-room-id" placeholder="أدخل رقم الروم">
+                </div>
+                <div class="form-group">
+                    <label>🔑 كلمة السر (إن وجدت)</label>
+                    <input type="password" id="join-password" placeholder="كلمة السر">
+                </div>
+                <button class="btn btn-primary" onclick="joinRoom()">
+                    الانضمام للروم
+                </button>
+            </div>
+        </div>
+
+        <!-- الإعلانات (اختياري) -->
+        <div class="ad-banner">
+            <p style="font-size: 12px; color: #888;">📢 مساحة إعلانية</p>
+        </div>
+
+        <footer>
+            <div class="features">
+                <div class="feature">
+                    <span>🔒</span>
+                    <p>تشفير كامل</p>
+                </div>
+                <div class="feature">
+                    <span>⚡</span>
+                    <p>سريع وخفيف</p>
+                </div>
+                <div class="feature">
+                    <span>🚫</span>
+                    <p>بدون تخزين</p>
+                </div>
+            </div>
+            <p class="privacy-note">
+                الصوت يتم نقله مباشرة بينكم (P2P) - لا نخزن أي شيء
+            </p>
+            <p style="text-align: center; margin-top: 15px;">
+                <a href="mic-test.html" style="color: white; text-decoration: underline;">
+                    🎤 اختبر الميكروفون أولاً
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

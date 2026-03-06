@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chat Room</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="room-page">
+    <div class="room-container">
+        <!-- معلومات الروم -->
+        <div class="room-header">
+            <div class="room-info">
+                <h2>🏠 الروم: <span id="room-id-display"></span></h2>
+                <button class="btn-copy" onclick="copyRoomId()">📋 نسخ رقم الروم</button>
+            </div>
+            <div class="connection-status" id="status">
+                <span class="status-dot"></span>
+                <span id="status-text">جاري الاتصال...</span>
+            </div>
+        </div>
+
+        <!-- منطقة الدردشة الصوتية -->
+        <div class="voice-area">
+            <div class="user-card">
+                <div class="avatar" id="local-avatar">
+                    <span class="avatar-icon">👤</span>
+                </div>
+                <p class="user-label">أنت</p>
+                <div class="audio-indicator" id="local-indicator">
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                </div>
+            </div>
+
+            <div class="connection-line" id="connection-line"></div>
+
+            <div class="user-card">
+                <div class="avatar" id="remote-avatar">
+                    <span class="avatar-icon">❓</span>
+                </div>
+                <p class="user-label" id="peer-status">في انتظار شخص آخر...</p>
+                <div class="audio-indicator" id="remote-indicator" style="display: none;">
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- أزرار التحكم -->
+        <div class="controls">
+            <button class="btn-control" id="mic-btn" onclick="toggleMic()" disabled>
+                <span id="mic-icon">🎤</span>
+                <span id="mic-text">الميكروفون</span>
+            </button>
+            <button class="btn-control btn-danger" onclick="leaveRoom()">
+                <span>🚪</span>
+                <span>مغادرة</span>
+            </button>
+        </div>
+
+        <!-- معلومات إضافية -->
+        <div class="info-box">
+            <p>💡 <strong>نصيحة:</strong> استخدم سماعات لتجنب صدى الصوت</p>
+            <p id="connection-quality" style="display: none;">
+                📊 جودة الاتصال: <span id="quality-indicator">جيد</span>
+            </p>
+        </div>
+
+        <!-- إعلان صغير -->
+        <div class="ad-small">
+            <p style="font-size: 11px; color: #999;">مساحة إعلانية</p>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="remote-audio" autoplay></audio>
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="js/webrtc.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // تهيئة الروم عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', initRoom);
+    </script>
+</body>
+</html>
