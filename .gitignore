@@ -1,0 +1,10 @@
+```
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Build artifacts and logs (preserved from existing if any)
+*.log
+```
